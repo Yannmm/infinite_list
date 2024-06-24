@@ -20,6 +20,8 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     // TODO: register on<PostFetched> event
     on<MorePosts>(_onPostsFetched,
         transformer: throttleDroppable(const Duration(milliseconds: 200)));
+
+    // TODO: what is `addError`?
   }
 
   void _onPostsFetched(MorePosts event, Emitter<PostState> emit) async {
@@ -39,11 +41,13 @@ class PostBloc extends Bloc<PostEvent, PostState> {
               posts: [...state.posts, ...posts],
               hasReachedMax: false));
     } catch (e) {
-      emit(state.copyWith(status: PostStatus.failure));
+      emit(state.copyWith(status: PostStatus.failure, error: e));
     }
   }
 
   Future<List<Post>> _fetch([int startIndex = 0]) async {
+    if (startIndex == 30) throw 'You have reached your max limit';
+
     final response = await httpClient.get(
       Uri.https(
         'jsonplaceholder.typicode.com',
